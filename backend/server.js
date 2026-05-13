@@ -13,17 +13,41 @@ const client = new Client({
   port: 5432
 });
 
-client.connect();
+setTimeout(() => {
+  client.connect()
+    .then(() => console.log("Conectado a PostgreSQL ✅"))
+    .catch(err => console.error("Error conexión DB:", err));
+}, 5000);
+
+app.get("/", (req, res) => {
+  res.send("Backend funcionando 🚀");
+});
 
 app.get("/api/hola", async (req, res) => {
   try {
-    await client.query("CREATE TABLE IF NOT EXISTS mensaje (texto TEXT)");
-    await client.query("DELETE FROM mensaje");
-    await client.query("INSERT INTO mensaje (texto) VALUES ('Hola desde Node.js 🚀')");
 
+    // crear tabla
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS mensaje (
+        id SERIAL PRIMARY KEY,
+        texto TEXT
+      )
+    `);
+
+    // insertar mensajes
+    await client.query(`
+      INSERT INTO mensaje (texto)
+      VALUES 
+      ('Hola desde Node.js 🚀'),
+      ('Hola profe 😎'),
+      ('Proyecto Fullstack funcionando 🔥')
+    `);
+
+    // obtener mensajes
     const result = await client.query("SELECT texto FROM mensaje LIMIT 1");
 
     res.json({ mensaje: result.rows[0].texto });
+
   } catch (error) {
     console.error(error);
     res.status(500).send("Error");
